@@ -10,6 +10,7 @@
 #include "execution/ast/ast_fwd.h"
 #include "execution/exec_defs.h"
 #include "execution/vm/vm_defs.h"
+#include "execution/vm/compilation_manager.h"
 
 namespace noisepage {
 namespace selfdriving {
@@ -85,6 +86,8 @@ class ExecutableQuery {
      */
     bool IsCompiled() const { return module_ != nullptr; }
 
+    std::unique_ptr<vm::Module> GetModule() { return std::move(module_);}
+
    private:
     // The functions that must be run (in the provided order) to execute this
     // query fragment.
@@ -112,6 +115,8 @@ class ExecutableQuery {
    * Destructor.
    */
   ~ExecutableQuery();
+
+
 
   /**
    * Setup the compiled query using the provided fragments.
@@ -159,6 +164,10 @@ class ExecutableQuery {
   /** @return The SQL query string */
   common::ManagedPointer<const std::string> GetQueryText() { return query_text_; }
 
+  void SetCompilationManager(common::ManagedPointer<vm::CompilationManager> compilation_manager) {
+    compilation_manager_ = compilation_manager;
+  }
+
  private:
   // The plan.
   const planner::AbstractPlanNode &plan_;
@@ -193,6 +202,8 @@ class ExecutableQuery {
   query_id_t query_id_;
   static std::atomic<query_id_t> query_identifier;
   common::ManagedPointer<const std::string> query_text_;
+  common::ManagedPointer<vm::CompilationManager> compilation_manager_;
+
 
   // MiniRunners needs to set query_identifier and pipeline_operating_units_.
   friend class noisepage::runner::MiniRunners;

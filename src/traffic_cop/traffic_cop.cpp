@@ -359,6 +359,7 @@ TrafficCopResult TrafficCop::CodegenPhysicalPlan(
       *physical_plan, exec_settings, connection_ctx->Accessor().Get(),
       execution::compiler::CompilationMode::Interleaved,
       common::ManagedPointer<const std::string>(&portal->GetStatement()->GetQueryText()));
+  exec_query->SetCompilationManager(compilation_manager_);
 
   // TODO(Matt): handle code generation failing
 

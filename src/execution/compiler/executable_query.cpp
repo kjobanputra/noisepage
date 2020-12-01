@@ -132,7 +132,13 @@ ExecutableQuery::ExecutableQuery(const std::string &contents,
 }
 
 // Needed because we forward-declare classes used as template types to std::unique_ptr<>
-ExecutableQuery::~ExecutableQuery() = default;
+ExecutableQuery::~ExecutableQuery(){
+  for (auto &fragment: fragments_) {
+    compilation_manager_->transferModule(fragment->GetModule());
+  }
+  compilation_manager_->transferContext(std::move(context_region_));
+
+};
 
 void ExecutableQuery::Setup(std::vector<std::unique_ptr<Fragment>> &&fragments, const std::size_t query_state_size,
                             std::unique_ptr<selfdriving::PipelineOperatingUnits> pipeline_operating_units) {

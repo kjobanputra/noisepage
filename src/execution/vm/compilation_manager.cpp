@@ -11,6 +11,7 @@ namespace noisepage::execution::vm {
 class CompilationManager::AsyncCompileTask : public tbb::task {
  public:
   // Construct an asynchronous compilation task to compile the the module
+
   explicit AsyncCompileTask(Module *module) : module_(module){}
 
   // Execute
@@ -45,20 +46,20 @@ class CompilationManager::AsyncCompileTask : public tbb::task {
  private:
   Module *module_;
   std::once_flag compiled_flag_;
-
 };
-
-/*
-std::unique_ptr<LLVMEngine::CompiledModule> CompilationManager::getMachineCode(Module *module) {
-  if (handle_to_machine_code_.find(*module) != handle_to_machine_code_.end()) {
-    return handle_to_machine_code_[*module];
-  }
-}
-*/
 
 void CompilationManager::addModule(Module *module) {
   auto *compile_task = new (tbb::task::allocate_root()) AsyncCompileTask(module);
   tbb::task::enqueue(*compile_task);
 }
 
+void CompilationManager::transferModule(std::unique_ptr<Module> &&module) {
+  module_.push_back(std::move(module));
 }
+
+void CompilationManager::transferContext(std::unique_ptr<util::Region> region) {
+  region_.push_back(std::move(region));
+}
+
+}  // namespace noisepage::execution::vm
+
