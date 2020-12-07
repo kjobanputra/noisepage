@@ -419,6 +419,7 @@ TrafficCopResult TrafficCop::RunExecutableQuery(const common::ManagedPointer<net
   const auto exec_query = portal->GetStatement()->GetExecutableQuery();
 
   try {
+    //TODO: start transaction t1 here.
     exec_query->Run(common::ManagedPointer(exec_ctx), execution_mode_);
   } catch (ExecutionException &e) {
     /*

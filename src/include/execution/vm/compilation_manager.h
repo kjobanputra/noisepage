@@ -1,11 +1,13 @@
 #pragma once
 
+#include <tbb/concurrent_unordered_map.h>
+
 #include <string>
 #include <unordered_map>
 
-#include "module.h"
-
 #include "execution/ast/context.h"
+#include "transaction/transaction_manager.h"
+#include "module.h"
 
 namespace noisepage::execution::vm {
 /**
@@ -14,24 +16,27 @@ namespace noisepage::execution::vm {
  */
 class CompilationManager {
  public:
-  CompilationManager() = default;
+  CompilationManager(common::ManagedPointer<transaction::TransactionManager> transaction_manager);
   ~CompilationManager() = default;
 
   // Send a module to the compilation manager for compilation.
-  void addModule(Module *module);
+  void AddModule(Module *module);
 
-  void transferModule(std::unique_ptr<Module> &&module);
+  void TransferModule(std::unique_ptr<Module> &&module, int module_id);
 
-  void transferContext(std::unique_ptr<util::Region> region);
+  void TransferRegion(std::unique_ptr<util::Region> region, int region_id);
+
+  common::ManagedPointer<transaction::TransactionManager> GetTransactionManager();
 
  private:
   class AsyncCompileTask;
-  //std::unordered_map <Module, std::unique_ptr<LLVMEngine::CompiledModule>> handle_to_machine_code_;
-
-  // TODO(Wuwen): implement a better data structure.
+ protected:
   std::vector<std::unique_ptr<Module>> module_;
-  std::vector<std::unique_ptr<ast::Context>> context_;
   std::vector<std::unique_ptr<util::Region>> region_;
-
+  std::atomic<int> next_module_id_;
+  std::atomic<int> next_region_id_;
+  static tbb::concurrent_unordered_map<std::atomic<int>, std::unique_ptr<Module>> module_map_;
+  static tbb::concurrent_unordered_map<std::atomic<int>, std::unique_ptr<util::Region>> region_map_;
+  common::ManagedPointer<transaction::TransactionManager> transaction_manager_;
 };
 }

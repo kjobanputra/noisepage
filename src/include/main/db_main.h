@@ -293,7 +293,7 @@ class DBMain {
    */
   class ExecutionLayer {
    public:
-    ExecutionLayer();
+    ExecutionLayer(common::ManagedPointer<transaction::TransactionManager> transaction_manager);
     ~ExecutionLayer();
 
     common::ManagedPointer<execution::vm::CompilationManager> GetCompilationManager() {
@@ -404,7 +404,7 @@ class DBMain {
 
       std::unique_ptr<ExecutionLayer> execution_layer = DISABLED;
       if (use_execution_) {
-        execution_layer = std::make_unique<ExecutionLayer>();
+        execution_layer = std::make_unique<ExecutionLayer>(txn_layer->GetTransactionManager());
       }
 
       std::unique_ptr<trafficcop::TrafficCop> traffic_cop = DISABLED;

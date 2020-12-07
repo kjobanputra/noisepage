@@ -13,6 +13,7 @@
 #include "loggers/execution_logger.h"
 #include "self_driving/modeling/operating_unit.h"
 #include "transaction/transaction_context.h"
+#include "transaction/defered_action_manager.h"
 
 namespace noisepage::execution::compiler {
 
@@ -131,13 +132,27 @@ ExecutableQuery::ExecutableQuery(const std::string &contents,
   }
 }
 
+//TODO: register a deferred event for calling the destructor
 // Needed because we forward-declare classes used as template types to std::unique_ptr<>
-ExecutableQuery::~ExecutableQuery(){
+ExecutableQuery::~ExecutableQuery() {
+  util::Region *region = context_region_.release();
+  std::vector<Fragment *> fragments;
+
+  for (auto &fragment : fragments_) {
+    fragments.emplace_back(fragment.release());
+  }
+
+  auto txn = compilation_manager_->GetTransactionManager().Get()->BeginTransaction();
+  txn->RegisterCommitAction([=](transaction::DeferredActionManager *deferred_action_manager){
+    //TODO: this is in an intermediate state
+    deferred_action_manager->RegisterDeferredAction([=](std::vector))
+  });
+  /*
   for (auto &fragment: fragments_) {
     compilation_manager_->transferModule(fragment->GetModule());
   }
-  compilation_manager_->transferContext(std::move(context_region_));
-
+  compilation_manager_->transferRegion(std::move(context_region_));
+   */
 };
 
 void ExecutableQuery::Setup(std::vector<std::unique_ptr<Fragment>> &&fragments, const std::size_t query_state_size,
